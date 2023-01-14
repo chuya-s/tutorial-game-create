@@ -4,6 +4,7 @@ import "@babylonjs/loaders/glTF";
 import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, Mesh, MeshBuilder, Color4, FreeCamera } from "@babylonjs/core";
 import { sceneUboDeclaration } from "@babylonjs/core/Shaders/ShadersInclude/sceneUboDeclaration";
 import { Button } from "@babylonjs/inspector/components/Button";
+import { Environment } from "./environment";
 
 enum State { START = 0, GAME = 1, LOSE = 2, CUTSCNENE = 3}
 class App {
@@ -13,7 +14,7 @@ class App {
     private _canvas: HTMLCanvasElement;
     private _engine: Engine;
     private _state: number = 0;
-
+    private _environment: Environment;
     constructor() {
         // create the canvas html element and attach it to the webpage
         var canvas = document.createElement("canvas");
@@ -28,6 +29,7 @@ class App {
         this._scene = new Scene(this._engine);
         this._cutScene = new Scene(this._engine);
         this._gameScene = new Scene(this._engine);
+        this._environment = new Environment(this._scene);
 
         var camera: ArcRotateCamera = new ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 2, 2, Vector3.Zero(), this._scene);
         camera.attachControl(canvas, true);
@@ -146,9 +148,9 @@ class App {
         let scene = new Scene(this._engine);
         this._gameScene = scene;
 
-        // TODO: load assets
         // create environment
-        // const environment = new Environment(scene);
+        this._environment = new Environment(scene);
+        await this._environment.load();
 
     }
 
