@@ -2,10 +2,14 @@ import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
 import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, Mesh, MeshBuilder, Color4, FreeCamera } from "@babylonjs/core";
+import { sceneUboDeclaration } from "@babylonjs/core/Shaders/ShadersInclude/sceneUboDeclaration";
+import { Button } from "@babylonjs/inspector/components/Button";
 
 enum State { START = 0, GAME = 1, LOSE = 2, CUTSCNENE = 3}
 class App {
     private _scene: Scene;
+    private _cutScene: Scene;
+    private _gameScene: Scene;
     private _canvas: HTMLCanvasElement;
     private _engine: Engine;
     private _state: number = 0;
@@ -22,6 +26,8 @@ class App {
         this._canvas = this._createCanvas();
         this._engine = new Engine(this._canvas, true);
         this._scene = new Scene(this._engine);
+        this._cutScene = new Scene(this._engine);
+        this._gameScene = new Scene(this._engine);
 
         var camera: ArcRotateCamera = new ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 2, 2, Vector3.Zero(), this._scene);
         camera.attachControl(canvas, true);
@@ -94,6 +100,62 @@ class App {
         this._scene.dispose();
         this._scene = scene;
         this._state = State.LOSE;        
+    }
+
+    private async _goToCutScene(): Promise<void> {
+        this._engine.displayLoadingUI();
+        // scene setup
+        this._scene.detachControl();
+        this._cutScene = new Scene(this._engine);
+        this._cutScene.clearColor = new Color4(0, 0, 0, 1);
+
+        // camera setup
+        let camera = new FreeCamera("camera1", new Vector3(0, 0, 0), this._cutScene);
+        camera.setTarget(Vector3.Zero());
+
+        // Scene finished loading
+        await this._cutScene.whenReadyAsync();
+        this._cutScene.dispose();
+        this._state = State.CUTSCNENE;
+        this._scene = this._cutScene;
+
+        // start loading and setting up the game during this scene
+        let finishedLoading = false;
+        await this._setUpGame().then(res => {
+            finishedLoading = true;
+        })
+    }
+
+    private async _setUpGame() {
+        // create scene
+        let scene = new Scene(this._engine);
+        this._gameScene = scene;
+
+        // TODO: load assets
+        // create environment
+        // const environment = new Environment(scene);
+
+    }
+
+    private async _goToGame() {
+        this._scene.detachControl();
+        let scene = this._gameScene;
+
+        scene.clearColor = new Color4(0.01568627450980392, 0.01568627450980392, 0.20392156862745098); // a color that fit the overall color scheme better
+        let camera: ArcRotateCamera = new ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 2, 2, Vector3.Zero(), scene);
+        camera.setTarget(Vector3.Zero());
+        
+        //temporary scene objects
+        var light1: HemisphericLight = new HemisphericLight("light1", new Vector3(1, 1, 0), scene);
+        var sphere: Mesh = MeshBuilder.CreateSphere("sphere", { diameter: 1 }, scene);
+    
+        //get rid of start scene, switch to gamescene and change states
+        this._scene.dispose();
+        this._state = State.GAME;
+        this._scene = scene;
+        this._engine.hideLoadingUI();
+        //the game is ready, attach control back
+        this._scene.attachControl();
     }
 
     //set up the canvas
