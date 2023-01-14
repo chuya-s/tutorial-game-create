@@ -40,6 +40,10 @@ class App {
             }
         });
 
+        this._main();
+    }
+
+    private async _main(): Promise<void> {
         // run the main render loop
         this._engine.runRenderLoop(() => {
             this._scene.render();
