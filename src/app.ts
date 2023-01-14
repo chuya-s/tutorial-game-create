@@ -74,6 +74,28 @@ class App {
         this._state = State.START;
     }
 
+    private async _goToLose(): Promise<void> {
+        this._engine.displayLoadingUI();
+
+        // scene setup
+        this._scene.detachControl();
+        let scene = new Scene(this._engine);
+        scene.clearColor = new Color4(0, 0, 0,1);
+
+        // camera setup
+        let camera = new FreeCamera("camera1", new Vector3(0, 0, 0), scene);
+        camera.setTarget(Vector3.Zero());
+
+        // Scene finished loading
+        await scene.whenReadyAsync();
+        this._engine.hideLoadingUI(); // when the scene is ready, hide loading
+
+        // Lastly set the current state
+        this._scene.dispose();
+        this._scene = scene;
+        this._state = State.LOSE;        
+    }
+
     //set up the canvas
     private _createCanvas(): HTMLCanvasElement {
 
