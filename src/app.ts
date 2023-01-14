@@ -1,7 +1,7 @@
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
-import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, Mesh, MeshBuilder } from "@babylonjs/core";
+import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, Mesh, MeshBuilder, Color4, FreeCamera } from "@babylonjs/core";
 
 enum State { START = 0, GAME = 1, LOSE = 2, CUTSCNENE = 3}
 class App {
@@ -44,10 +44,34 @@ class App {
     }
 
     private async _main(): Promise<void> {
+        await this._goToStart();
+
         // run the main render loop
         this._engine.runRenderLoop(() => {
             this._scene.render();
         });
+    }
+
+    private async _goToStart() {
+        this._engine.displayLoadingUI();
+        
+        // scene setup
+        this._scene.detachControl();
+        let scene = new Scene(this._engine);
+        scene.clearColor = new Color4(0, 0, 0, 1);
+
+        // camera setup
+        let camera = new FreeCamera("camera1", new Vector3(0, 0, 0), scene);
+        camera.setTarget(Vector3.Zero());
+
+        // Scene finished loading
+        await scene.whenReadyAsync();
+        this._engine.hideLoadingUI(); // when the scene is ready, hide loading
+
+        // Lastly set the current state
+        this._scene.dispose();
+        this._scene = scene;
+        this._state = State.START;
     }
 
     //set up the canvas
