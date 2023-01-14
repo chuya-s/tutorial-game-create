@@ -54,8 +54,23 @@ class App {
 
         // run the main render loop
         this._engine.runRenderLoop(() => {
-            this._scene.render();
+            switch (this._state) {
+                case State.START:
+                    this._scene.render();
+                    break;
+                case State.CUTSCNENE:
+                    this._scene.render();
+                case State.GAME:
+                    this._scene.render();
+                case State.LOSE:
+                    this._scene.render();
+                default: break;
+            }
         });
+
+        window.addEventListener('resize', ()=> {
+            this._engine.resize();
+        })
     }
 
     private async _goToStart() {
